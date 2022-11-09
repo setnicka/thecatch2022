@@ -1,11 +1,35 @@
 # TheCatch 2022
 
-CESNET na podzim 2022 opět uspořádal již tradiční CTF hru [TheCatch](https://www.thecatch.cz/)
-se spoustou úloh, ve kterých bylo vždy získat "vlajku" (nějaký kód) ukrytý
-v různých podobách na různých místech. Povedlo se mi nakonec získat vlajku ve
-14 z 18 úloh a níže se je pokusím popsat svůj postup na jejich řešení.
+CESNET na podzim 2022 opět uspořádal již tradiční CTF hru
+[TheCatch](https://www.thecatch.cz/) se spoustou úloh, ve kterých bylo vždy
+cílem získat "vlajku" – ukrytý kód skrývající se v různých podobách v různých
+hacknutelných systémech. Povedlo se mi nakonec získat vlajku ve 14 z 18 úloh a
+níže se pokusím popsat svůj postup na jejich řešení.
 
-## Candidate challenges – jednoduchá rozcvička (4/4 bodů)
+* [Candidate challenges – jednoduchá rozcvička (4/4 bodů)](#candidate-challenges--jednoduchá-rozcvička-44-bodů)
+  * [VPN access (1/1 bod)](#vpn-access-11-bod)
+  * [Bitcoin wallet (1/1 bod)](#bitcoin-wallet-11-bod)
+  * [Unknown package (1/1 bod)](#unknown-package-11-bod)
+  * [Regex crossword (1/1 bod)](#regex-crossword-11-bod)
+* [Incidents (10/10 bodů)](#incidents-1010-bodů)
+  * [Route tracking (2/2 body)](#route-tracking-22-body)
+  * [Van keys (2/2 body)](#van-keys-22-body)
+  * [Messenger portal (3/3 body)](#messenger-portal-33-body)
+  * [Fraudulent e-mail (3/3 body)](#fraudulent-e-mail-33-body)
+* [Miscellaneous (9/9 bodů)](#miscellaneous-99-bodů)
+  * [Old webpages (1/1 bod)](#old-webpages-11-bod)
+  * [Download backup (2/2 body)](#download-backup-22-body)
+  * [DNS storage (3/3 body)](#dns-storage-33-body)
+  * [Packet auditing (3/3 body)](#packet-auditing-33-body)
+* [Corporate websites (7/25 bodů)](#corporate-websites-725-bodů)
+  * [Streamlining portal (3/3 body)](#streamlining-portal-33-body)
+  * [Streamlining portal NG (4/4 body)](#streamlining-portal-ng-44-body)
+  * [XML Prettifier (dokončeno po soutěži, 4 body)](#xml-prettifier-dokončeno-po-soutěži-4-body)
+  * [Blog site (nedokončeno, 4 body)](#blog-site-nedokončeno-4-body)
+  * [Phonebook (nedokončeno, 5 bodů)](#phonebook-nedokončeno-5-bodů)
+  * [Orderly IS (nedokončeno, 5 bodů)](#orderly-is-nedokončeno-5-bodů)
+
+## Candidate challenges – jednoduchá rozcvička (4/4 bodů)</small>
 
 ### VPN access (1/1 bod)
 
@@ -69,7 +93,7 @@ Existuje mnoho webů umožňující náhled na jednotlivé transakce, stačí se
 třeba na <https://www.blockchain.com/btc/address/bc1q8vnufzpyurlnvrxavrn2vxe5z0nafrp2d8nzng>.
 
 Tam nalezneme, že na tuto peněženku byla provedena jediná transakce z Bitcoinové
-peněženky `bc1qrqqjjuefgc4akxl05cd4haxp5jznmmptjrllft`. Toti ID zadáme do
+peněženky `bc1qrqqjjuefgc4akxl05cd4haxp5jznmmptjrllft`. Toto ID zadáme do
 připraveného webu a když si necháme zobrazit poznámku, dostaneme vlajku
 `FLAG{PWei-v9hV-tekF-ptEl}`.
 
@@ -133,7 +157,7 @@ zahájit u některých jistých znaků a postupně doplňovat:
 ![řešení](05_Regex_crossword/finnish_regular_test.svg)
 
 Nakonec z toho vyšlo symetrické řešení `USE{FLAG{SUOM-ULOT-TOLU-MOUS}GALF}ESU`,
-z kterého stačilo vzít jen správnou podčást.
+z kterého stačilo vzít jen správnou část.
 
 ## Incidents (10/10 bodů)
 
@@ -173,7 +197,7 @@ knihovnu (Graphviz je docela používaný). Já jsem zvolil druhou možnost a po
 knihovnu [`pydot`](https://pypi.org/project/pydot/) pro Python.
 
 Nyní již máme načtené vrcholy a hrany, druhou částí řešení je **nalezení cesty
-zadné délky**. Potřebujeme vymyslet vhodný algoritmus.
+zadané délky**. Potřebujeme vymyslet vhodný algoritmus.
 
 Pokud bychom chtěli úlohu vyřešit obecně v rozumném polynomiálním čase, asi by
 se nám moc dobře nevedlo, úloha je totiž NP-úplná (hledání cesty zadané délky se
@@ -278,7 +302,7 @@ zkoumání na jeho chování. Otevřeme si tedy debug konzolu prohlížeče a zj
 kterého dostane nazpátek zprávu, kterou zaloguje do konzole: `Detected
 unsupported device. Only mobile devices are supported.`
 
-Podíváme se, co jsem poslali za request a jak mohl server poznat, že nejsm
+Podíváme se, co jsem poslali za request a jak mohl server poznat, že nejsme
 mobil. Request byl POST a poslali jsme:
 
 ```text
@@ -605,17 +629,17 @@ Dostaneme (zkráceno):
 
 ```text
 ;; ANSWER SECTION:
-mysterious-delivery.tcc. 86400	IN	SOA	ns1.mysterious-delivery.tcc. hostmaster.ns1.mysterious-delivery.tcc. 2022100101 604800 86400 2419200 86400
-mysterious-delivery.tcc. 86400	IN	RRSIG	SOA 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. fZk3...
-mysterious-delivery.tcc. 86400	IN	NS	ns2.mysterious-delivery.thecatch.cz.
-mysterious-delivery.tcc. 86400	IN	NS	ns1.mysterious-delivery.thecatch.cz.
-mysterious-delivery.tcc. 86400	IN	RRSIG	NS 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. cdUX...
-mysterious-delivery.tcc. 86400	IN	NSEC	www.customer-service.mysterious-delivery.tcc. NS SOA RRSIG NSEC DNSKEY
-mysterious-delivery.tcc. 86400	IN	RRSIG	NSEC 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. 45uH...
-mysterious-delivery.tcc. 86400	IN	DNSKEY	256 3 8 AwEA...
-mysterious-delivery.tcc. 86400	IN	DNSKEY	257 3 8 AwEA...
-mysterious-delivery.tcc. 86400	IN	RRSIG	DNSKEY 8 2 86400 20221029112658 20220929112658 22312 mysterious-delivery.tcc. MsPz...
-mysterious-delivery.tcc. 86400	IN	RRSIG	DNSKEY 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. QwEL...
+mysterious-delivery.tcc. 86400  IN  SOA  ns1.mysterious-delivery.tcc. hostmaster.ns1.mysterious-delivery.tcc. 2022100101 604800 86400 2419200 86400
+mysterious-delivery.tcc. 86400  IN  RRSIG  SOA 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. fZk3...
+mysterious-delivery.tcc. 86400  IN  NS  ns2.mysterious-delivery.thecatch.cz.
+mysterious-delivery.tcc. 86400  IN  NS  ns1.mysterious-delivery.thecatch.cz.
+mysterious-delivery.tcc. 86400  IN  RRSIG  NS 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. cdUX...
+mysterious-delivery.tcc. 86400  IN  NSEC  www.customer-service.mysterious-delivery.tcc. NS SOA RRSIG NSEC DNSKEY
+mysterious-delivery.tcc. 86400  IN  RRSIG  NSEC 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. 45uH...
+mysterious-delivery.tcc. 86400  IN  DNSKEY  256 3 8 AwEA...
+mysterious-delivery.tcc. 86400  IN  DNSKEY  257 3 8 AwEA...
+mysterious-delivery.tcc. 86400  IN  RRSIG  DNSKEY 8 2 86400 20221029112658 20220929112658 22312 mysterious-delivery.tcc. MsPz...
+mysterious-delivery.tcc. 86400  IN  RRSIG  DNSKEY 8 2 86400 20221029112658 20220929112658 65089 mysterious-delivery.tcc. QwEL...
 ```
 
 Všimneme si, že tady žádný TXT záznam není, asi budeme muset najít jinou
@@ -638,7 +662,7 @@ nedůležité.*
 To je hezky navržený princip podepisování, ale kvůli zpětné kompatibilitě má
 jistou díru. Jak podepsat prázdnou odpověď, tedy jak to, že nikdo nemůže
 podvrhnout odpověď "x.y.z neexistuje"? K tomu byly vymyšlené záznamy NSEC, které
-existují pro každé validní jméno a říkají, které první jméno (v setřízeném
+existují pro každé validní jméno a říkají, které první jméno (v setříděném
 seznamu) následuje po nich. Tedy když pro existující subdoménu `a.domena.cz`
 dostaneme NSEC záznam "další validní subdoména je až `f.domena.cz`, tak bezpečně
 víme, že doména `bedrich.domena.cz` neexistuje.
@@ -658,7 +682,7 @@ delay-generator.mysterious-delivery.tcc. CNAME RRSIG NSEC
 ```
 
 Ano! Tak si pojďme vylistovat postupně celou doménu, dokud se nezacyklíme.
-U každédomény nás navíc bude zajímat TXT záznam (pokud existuje): [solve.sh](16_DNS_storage/solve.sh)
+U každé domény nás navíc bude zajímat TXT záznam (pokud existuje): [solve.sh](16_DNS_storage/solve.sh)
 
 ```bash
 start=mysterious-delivery.tcc.
@@ -735,8 +759,8 @@ barvu balíčku a pozadí (a pokud budou odpovídat, tak nám dát vědět jmén
 souboru). Protože jsou všechny obrázky stejně velké, tak si vybereme dvoje
 souřadnice pixelu, které nás budou zajímat:
 
-* pro barvu pozadí vezmeme levý vrchí roh obrázku: `[0, 0]`
-* pro bravu balíčku vezmeme pixel někde hluboku v balíčku daleko od jeho hran: `[120, 120]`
+* pro barvu pozadí vezmeme levý vrchní roh obrázku: `[0, 0]`
+* pro bravu balíčku vezmeme pixel někde hluboko v balíčku daleko od jeho hran: `[120, 120]`
 
 Poté potřebujeme určit barvy. Napoprvé jsem se trochu nachytal, protože
 v legendě jsou barvy trošku jiné, než v jednotlivých souborech zásilek (jen
@@ -760,7 +784,7 @@ Tato část mě skutečně potrápila a zde se rozhodovalo o vítězství. Bohu�
 povedlo vyřešit jen dvě ze šesti úloh, i když k řešení některých dalších jsem
 měl trochu našlápnuto. Bohužel se však nezadařilo.
 
-## Streamlining portal (3/3 body)
+### Streamlining portal (3/3 body)
 
 > Hi, packet inspector,
 >
@@ -817,7 +841,7 @@ zdrojáku není, pojďme tedy zkoumat systém:
 
 Na poslední zmíněné stránce najdeme vlajku `FLAG{OONU-Pm7V-BK3s-YftK}`.
 
-## Streamlining portal NG (4/4 body)
+### Streamlining portal NG (4/4 body)
 
 Bylo odemčeno po dokončení **Streamlining portal**.
 
@@ -878,7 +902,7 @@ Na poslední zmíněné stránce najdeme vlajku `FLAG{hvIM-3aty-R39h-dOZ4}`.
 
 ---
 
-## XML Prettifier (dokončeno po soutěži, 4 body)
+### XML Prettifier (dokončeno po soutěži, 4 body)
 
 > Hi, packet inspector,
 >
@@ -984,7 +1008,7 @@ XML:
 
 … a parser nám vypíše zdrojáky stránky obsahující mimo jiné i FLAG: `FLAG{GG53-5U3w-VT8F-qB31}`.
 
-## Blog site (nedokončeno, 4 body)
+### Blog site (nedokončeno, 4 body)
 
 > Hi, packet inspector,
 >
@@ -1041,11 +1065,11 @@ $ flask-unsign -u --cookie "eyJ1c2VyX2lkIjoxMDAxfQ.Y2v_5g.ECnkItqMkllygEgnPXPAby
 ```
 
 `flask-unsign` obsahuje celkem obsáhlý wordlist, ale bohužel nic nenašel,
-vyzkoušení `dev` přímo z tutoriálu boužel také k ničemu nevedlo.
+vyzkoušení `dev` přímo z tutoriálu bohužel také k ničemu nevedlo.
 
 *Toto je místo, kde jsem s řešením skončil a dál jsem se nedostal.*
 
-## Phonebook (nedokončeno, 5 bodů)
+### Phonebook (nedokončeno, 5 bodů)
 
 > Hi, packet inspector,
 >
@@ -1074,7 +1098,7 @@ aplikace LDAP serveru pokládá. Zkusíme, jestli je `__DATA__` nahrazované bez
 jakéhokoliv escapování a půjde tak udělat nějaký typ query injection.
 
 V LDAP filterech se AND nebo OR zapisují v prefixové notaci, tedy pokud
-bych chtěl udělat OR tří výrazů, napíšeu ho jako `(|(A)(B)(C))`. To by normálně
+bych chtěl udělat OR tří výrazů, napíšu ho jako `(|(A)(B)(C))`. To by normálně
 situaci trochu zkomplikovalo (protože nemůže napsat něco jako `)) OR 1`), ale
 tady to vypadá, že na začátku výrazu zůstal zapomenutý OR.
 
@@ -1120,7 +1144,8 @@ Nápadné je `sambaNTPassword` a `sambaLMPassword`. Podle
 [dokumentace](http://ubiqx.org/cifs/SMB.html#SMB.8) by LM hash by měl DES()
 z uppercase hesla a NT hash by mělo být MD4() hesla.
 
-Zkusil jsem NT i LM heslo rasknout pomocí John-the-Ripper, ale bohužel bez úspěchu:
+Zkusil jsem NT i LM heslo lousknout pomocí [John-the-Ripper](https://www.openwall.com/john/),
+ale bohužel bez úspěchu:
 
 ```sh
 # Vestavěný wordlist:
@@ -1134,7 +1159,7 @@ john-the-ripper --fork=8 --format=LM --rules -w=~/rockyou.txt 12_Phonebook/hashL
 
 *Toto je místo, kde jsem s řešením skončil a dál jsem se nedostal.*
 
-## Orderly IS (nedokončeno, 5 bodů)
+### Orderly IS (nedokončeno, 5 bodů)
 
 > Hi, packet inspector,
 >
@@ -1149,6 +1174,6 @@ john-the-ripper --fork=8 --format=LM --rules -w=~/rockyou.txt 12_Phonebook/hashL
 >
 > May the Packet be with you!
 
-*Disclaimer: Tuto úlohu jsem bohužel nedokončil. Dokone jsem zde nepřišel ani na
+*Disclaimer: Tuto úlohu jsem bohužel nedokončil. Dokonce jsem zde nepřišel ani na
 nic zajímavého hodného sepsání. Doporučuji podívat se na writeup někoho
 úspěšnějšího.*
