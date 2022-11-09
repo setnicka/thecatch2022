@@ -1,0 +1,4 @@
+<!ENTITY % url SYSTEM "http://localhost:50000/notes">
+<!ENTITY % start "<![CDATA[">
+<!ENTITY % end "]]>">
+<!ENTITY % all "<!ENTITY contents '%start;%url;%end;'>">
