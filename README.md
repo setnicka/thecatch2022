@@ -44,7 +44,7 @@ níže se pokusím popsat svůj postup na jejich řešení.
 > May the Packet be with you!
 
 Tady asi není co vysvětlovat, bylo jen potřeba stáhnout si vygenerovaný
-konfigurační soubor pro OpenVPN (s osobním privátním klíčem), spustit OpenVPN,
+konfigurační soubor pro OpenVPN (s osobním privátním klíčem), spustit OpenVPN,
 navštívit stránku na neexistující TLD .tcc dostupnou jenom přes VPNku a z ní
 přečíst vlajku.
 
@@ -54,8 +54,9 @@ OpenVPN v Linuxu jednoduše spustíme pomocí:
 sudo openvpn --config ctfd_ovpn.ovpn
 ```
 
-Trochu trikové bylo jenom DNSka do resolveru. Ve Windows se to stane automaticky,
-v Linuxu na to je potřeba pár řádků v konfiguraci navíc. Třeba standardní Debian
+Trochu trikové bylo jenom automaticky přidat DNS server získaný po připojení od
+OpenVPN serveru. Ve Windows se do systémového resolveru přidá automaticky,
+v Linuxu na to je potřeba pár řádků v konfiguraci navíc. Třeba standardní Debian
 instalace OpenVPN obsahuje skript `/etc/openvpn/update-resolv-conf`, který se
 postará o přidání DNSka získaného od OpenVPN serveru do systémového resolveru.
 Aby se to stalo automaticky, stačí do konfiguračního souboru staženého ze
@@ -113,7 +114,7 @@ připraveného webu a když si necháme zobrazit poznámku, dostaneme vlajku
 > May the Packet be with you!
 
 Ve staženém ZIPu jsou dvě fotky balíčku, jedna s hezkými obrázky a druhá
-s různými kódy. Když si je načteme (třeba telefonem z obrazovky, nebo zavoláním
+s různými kódy. Když si kódy načteme (třeba telefonem z obrazovky, nebo zavoláním
 `zbarimg unknown_package_2261_2.JPG` z balíčku `zbar-tools`), zjistíme
 následující:
 
@@ -151,7 +152,7 @@ jsem zachoval původní zadání i zde v repozitáři: [PDF se zadáním](05_Reg
 
 Řešení bylo jednoduché (pro aktuální absenci tiskárny jsem vyplňoval
 v [Xournal++](https://xournalpp.github.io/)). Šlo si všimnout, že všechny tři
-uhlopříčky vynucují jistou měrou symetrii okolo prostředka. Vyplňování šlo
+uhlopříčky vynucují jistou měrou symetrii okolo prostředku. Vyplňování šlo
 zahájit u některých jistých znaků a postupně doplňovat:
 
 ![řešení](05_Regex_crossword/finnish_regular_test.svg)
@@ -242,6 +243,7 @@ Postupně v kódu opravíme chyby (a zastaralosti):
 * Na moderních systémech už není `python` ale explicitně `python3`, opravíme
   tedy shebang na `#!/usr/bin/env python3`
 * Přidáme import chybějících knihoven: `base64`, `hashlib`, `random`
+* Namísto knihovny `Crypto` použijeme její novější náhradu `Cryptodome`
 * Vypadá to, že kód editovalo více lidí a jeden odsazoval tabulátory a druhý
   mezerami, Python tohle nemá rád. Opravíme tedy vše na mezery (v tomhle hodně
   pomůže zobrazení whitespace znaků v editoru).
@@ -263,10 +265,10 @@ hledání na internetu nám prozradí, že se jedná o soubor s prvním milionem
 
 Po jeho stažení už nám skript ochotně dekóduje vlajku: `FLAG{ITRD-Pyuv-JuLt-9zpM}`
 
-*Komentář: Vyrábět super-secure klíč z lehce rekonstruovatelného klíče je velmi
+*Komentář: Vyrábět super-secure klíč z lehce rekonstruovatelného vstupu je velmi
 špatné použití kryptografického systému (zde naschvál použitého kvůli soutěži).
 Správně by proces výroby klíče neměl být již nikdy replikovatelný (ani při úniku
-zdrojových kódů), klíč by měl vyroben jen jednou a bezpečně uložen.*
+zdrojových kódů), klíč by měl být vyroben jen jednou a bezpečně uložen.*
 
 ### Messenger portal (3/3 body)
 
@@ -287,7 +289,7 @@ zdrojových kódů), klíč by měl vyroben jen jednou a bezpečně uložen.*
 >
 > May the Packet be with you!
 
-Tahle úloha byla spíše mechanicky otravná, ale hezky ilustruje, co všechno může
+Tato úloha byla spíše mechanicky otravná, ale hezky ilustruje, co všechno může
 web zjistit o klientském prohlížeči a zařízení.
 
 Po načtení stránky zjistíme, že se dostáváme na jakýsi Messenger portál, kam lze
@@ -296,13 +298,13 @@ zkusíme zadat nějaké písmeno, zahlásí nám web "Invalid messenger identifi
 když tam zkusíme zadat nějaké číslo (protože ID jsou přece čísla), tak se
 nestane na první pohled nic.
 
-Zkoumání Javascriptu ukazuje, že je nehezky obfuscovaný, tak nejdříve zaměříme
-zkoumání na jeho chování. Otevřeme si tedy debug konzolu prohlížeče a zjistíme,
+Zkoumání kódu v Javascriptu ukazuje, že je nehezky obfuscovaný, tak nejdříve
+zaměříme zkoumání na jeho chování. Otevřeme si debug konzolu prohlížeče a zjistíme,
 že ve chvíli odeslání políčka s číslem udělá Javascript request na server, ze
 kterého dostane nazpátek zprávu, kterou zaloguje do konzole: `Detected
 unsupported device. Only mobile devices are supported.`
 
-Podíváme se, co jsem poslali za request a jak mohl server poznat, že nejsme
+Podíváme se, co jsme poslali za request a jak mohl server poznat, že nejsme
 mobil. Request byl POST a poslali jsme:
 
 ```text
@@ -545,11 +547,11 @@ vyhledávačů, které umí najít obrázek podle obrázku, známý je napříkl
 [TinyEye](https://tineye.com/). Bohužel bez úspěchu, povedlo se najít jenom
 dílčí obrázky, ze kterých byl velký obrázek vytvořen.
 
-Podíval jsem se proti na hint, který říkal, že Brenda pravděpodobně používala
+Podíval jsem se proto na hint, který říkal, že Brenda pravděpodobně používala
 souborový systém NTFS. Po chvíli zkoumání jsem zjistil, že NTFS má vlastnost,
 které se říká ADS – Alternate Data Stream. Umožňuje k souborům ukládat různé
 "alternativní streamy" obsahující zajímavá metadata (nad rámec těch klasických
-jako je třeba datum vytvoření a změny). Zajímavé čtení o ADS se dá najít třeba
+jako třeba datum vytvoření a změny). Zajímavé čtení o ADS se dá najít třeba
 zde: <https://www.sciencedirect.com/topics/computer-science/alternate-data-stream>
 
 Obdařen tímto novým zjištěním jsem zkoumal dál a zjistil jsem, že RAR archivy
@@ -660,18 +662,18 @@ používá se pak k podepisování jednotlivých odpovědí. Ale to je pro nás
 nedůležité.*
 
 To je hezky navržený princip podepisování, ale kvůli zpětné kompatibilitě má
-jistou díru. Jak podepsat prázdnou odpověď, tedy jak to, že nikdo nemůže
+jistou díru. Jak podepsat prázdnou odpověď? Jak zajistit, že nikdo nemůže
 podvrhnout odpověď "x.y.z neexistuje"? K tomu byly vymyšlené záznamy NSEC, které
-existují pro každé validní jméno a říkají, které první jméno (v setříděném
-seznamu) následuje po nich. Tedy když pro existující subdoménu `a.domena.cz`
+existují pro každé validní jméno a říkají, které první jméno (v lexikografickém
+pořadí) následuje po nich. Tedy když pro existující subdoménu `a.domena.cz`
 dostaneme NSEC záznam "další validní subdoména je až `f.domena.cz`, tak bezpečně
 víme, že doména `bedrich.domena.cz` neexistuje.
 
 Když se dotážeme přímo na doménu `bedrich.domena.cz`, tak dostaneme NSEC záznam
 pro `a.domane.cz` osvědčující, že další validní doména je skutečně až
 `f.domena.cz`. Vidíte už v tom tu díru? Ano… dá se takto lehce vylistovat celá
-zóna. Tole trochu řeší přechod na NSEC3 s hashi, ale zkusme, jestli tahle zóna
-nepoužívá plain NSEC záznamy:
+zóna. Tento problém trochu řeší přechod na NSEC3 s hashováním, ale zkusme,
+jestli tahle zóna nepoužívá plain NSEC záznamy:
 
 ```sh
 $ dig +short NSEC @ns1.mysterious-delivery.thecatch.cz mysterious-delivery.tcc
@@ -750,14 +752,14 @@ Mimo toho na nás také vypadl obrázek s legendou:
 
 ![barevná legenda](18_Packet_auditing/description.png)
 
-Naším úkolem je tedy najít obrázek s oranžovým pozadím (tým Brenda) a zeleným
+Naším úkolem bylo najít obrázek s oranžovým pozadím (tým Brenda) a zeleným
 balíčkem (ready for pickup). Dělat to ručně by bylo značně otravné, pojďme si
 napsat program.
 
 Náš program by měl projít strukturu složek, načíst každý PNG soubor a zjistit
 barvu balíčku a pozadí (a pokud budou odpovídat, tak nám dát vědět jméno
 souboru). Protože jsou všechny obrázky stejně velké, tak si vybereme dvoje
-souřadnice pixelu, které nás budou zajímat:
+souřadnice pixelů, které nás budou zajímat:
 
 * pro barvu pozadí vezmeme levý vrchní roh obrázku: `[0, 0]`
 * pro bravu balíčku vezmeme pixel někde hluboko v balíčku daleko od jeho hran: `[120, 120]`
@@ -771,8 +773,8 @@ tedy pár souborů a vezmeme barvy z nich:
 * hledáme balíček s barvou `(0, 133, 71)`
 
 Program můžeme napsat v Pythonu, kde je skvělá jednoduchá knihovna na práci
-s obrázky [Pillow](https://pypi.org/project/Pillow/) (také zvaná `PIL`). Program
-je celkem jednoduchý: [solver.py](18_Packet_auditing/solver.py)
+s obrázky [Pillow](https://pypi.org/project/Pillow/) (také zvaná `PIL`).
+Výsledný program je přímočarý: [solver.py](18_Packet_auditing/solver.py)
 
 Po chvíli nám oznámí soubor `2022-08/30/19/000000.png`, v němž se nachází
 pickup code `629-367-219-835`, který můžeme zadat na webu a získat tak kód
@@ -781,8 +783,8 @@ vlajky: `FLAG{rNM8-Aa5G-dF5y-6LqY}`
 ## Corporate websites (7/25 bodů)
 
 Tato část mě skutečně potrápila a zde se rozhodovalo o vítězství. Bohužel se mi
-povedlo vyřešit jen dvě ze šesti úloh, i když k řešení některých dalších jsem
-měl trochu našlápnuto. Bohužel se však nezadařilo.
+před termínem povedlo vyřešit jen dvě ze šesti úloh, i když k řešení některých
+dalších jsem měl trochu našlápnuto. Bohužel se však nezadařilo.
 
 ### Streamlining portal (3/3 body)
 
@@ -799,7 +801,7 @@ měl trochu našlápnuto. Bohužel se však nezadařilo.
 
 Když navštívíme stránku, tak dostaneme hned přesměrování na URL
 <http://user-info.mysterious-delivery.tcc/hello/user>, kde se nám zobrazí "Hello user".
-o svádí k tomu napsat do URL něco jiného… a skutečně, když změníme poslední část
+To svádí k tomu napsat do URL něco jiného… a skutečně, když změníme poslední část
 na cokoliv, tak se to vypíše.
 
 Zkusme, jestli se tím nedá provést nějaký code injection do šablonovacího
@@ -891,7 +893,7 @@ Jsou zde dvě odlišnosti:
 
 Ale tahle obrana je velmi lajdácká. Znak `/` nám sice neprojde, ale skoro cokoliv
 jiného ano (dokud to nebude obsahovat substring `cd`). Způsob, jak v Pythonu
-získat string `/` je třeba `chr(47)`, tak toho pojďme využít a jen upravme
+získat string `/`, je třeba `chr(47)`. Tak toho pojďme využít a jen upravme
 naše minulé payloady:
 
 * Vylistování `/app`: `"+str(__import__("os").listdir(chr(47)+"app"))+"` [odkaz](http://user-info-ng.mysterious-delivery.tcc/hello/%22+str(__import__(%22os%22).listdir(chr(47)+%22app%22))+%22)
@@ -921,8 +923,8 @@ sepisování tohoto writeupu, kdy jsem našel své chyby :(.*
 
 Na odkazované stránce si všimneme odkazu na
 [/notes](http://prettifier.mysterious-delivery.tcc:50000/notes), který bohužel
-vrací "Forbidden, IP filter is active, content is accessible only from
-localhost.". Vypadá to, že se budeme muset dostat k této stránce.
+vrací: "Forbidden, IP filter is active, content is accessible only from
+localhost." Vypadá to, že se budeme muset dostat k této stránce.
 
 Pak si všimneme odkazu na stránku, kam lze zadat XML a udělat ho hezkým. XML je
 docela komplikovaný formát, takže k tomu udělat ho pěkným ho pravděpodobně bude
@@ -952,7 +954,7 @@ vypsat:
 ```
 
 Toto skutečně zafunguje a vypíše nám na webu obsah `/etc/passwd`. Bohužel když
-zkusíme vypsat obsah `/notes` získaný přes localhost:
+zkusíme vypsat obsah `/notes` získaný přes localhost…
 
 ```xml
 <!DOCTYPE foo [
@@ -961,7 +963,7 @@ zkusíme vypsat obsah `/notes` získaný přes localhost:
 <foo>&xxe;</foo>
 ```
 
-Bohužel v tu chvíli nám web zahlásí, že při parsování XML získaného z této adresy
+… tak nám web zahlásí, že při parsování XML získaného z této adresy
 nastala chyba:
 
 ```text
@@ -992,7 +994,7 @@ Zlé DTD může vypadat třeba takto:
 *Poznámka: Během soutěže jsem DTD měl bohužel špatně poskládané a nepovedlo se mi
 ho oddebugovat, opravil jsem to až při psaní tohoto writeupu.*
 
-Vystavíme ho třeba na lokálním počítači – když jsem připojení k VPNce, může se
+Vystavíme ho třeba na lokálním počítači – když jsme připojení k VPNce, může se
 k nám server s XML parserem taky připojit. Do XML parseru pak vložíme následující
 XML:
 
@@ -1033,8 +1035,8 @@ Dokonce si můžeme stáhnout i zdrojové kódy:
 <https://github.com/pallets/flask/tree/main/examples/tutorial>
 
 Máme tedy zdrojové kódy aplikace, tak si ji můžeme prohlédnout. Je to jednoduchá
-aplikace, která používá SQLite3 databázi uživatelů a příspěvků a umožňující
-registraci, přihlášení, napsání a editaci příspěvku.
+aplikace, která používá SQLite3 databázi uživatelů a příspěvků, a umožňuje
+registraci a přihlášení uživatelů a napsání a editaci příspěvku.
 
 Aplikace na první pohled neobsahuje žádnou zjevnou díru, tak jsem zkusil cílit
 svůj útok na její nastavení. Přihlášený uživatel je totiž autentifikován
@@ -1047,8 +1049,8 @@ eyJ1c2VyX2lkIjoxMDAxfQ.Y2v_5g.ECnkItqMkllygEgnPXPAby6AvjE
 
 Její první část je base64 zakódovaný JSON, v tomto případě `{"user_id":1001}`.
 Druhá část je pak podpis. Podpis vznikl s použitím `SECRET_KEY` z konfigurace.
-Jedna z možností je, že autor aplikace nezměnil defaultní hodnotu `DEV`
-z tutoriálu. Pojďme tedy zkusit nějaké nástroje.
+Jedna z možností je, že autor aplikace nezměnil defaultní hodnotu z tutoriálu.
+Pojďme tedy zkusit nějaké nástroje.
 
 Existuje jednoduchý tool [flask-unsign](https://pypi.org/project/flask-unsign/),
 kterému lze zadat cookie a zkusit, jestli náhodou neuhádneme klíč, se kterým
@@ -1064,8 +1066,8 @@ $ flask-unsign -u --cookie "eyJ1c2VyX2lkIjoxMDAxfQ.Y2v_5g.ECnkItqMkllygEgnPXPAby
 [!] Failed to find secret key after 50647 attempts.
 ```
 
-`flask-unsign` obsahuje celkem obsáhlý wordlist, ale bohužel nic nenašel,
-vyzkoušení `dev` přímo z tutoriálu bohužel také k ničemu nevedlo.
+`flask-unsign` obsahuje celkem obsáhlý wordlist, ale bohužel nic nenašel.
+Vyzkoušení `dev` přímo z tutoriálu bohužel také k ničemu nevedlo.
 
 *Toto je místo, kde jsem s řešením skončil a dál jsem se nedostal.*
 
@@ -1085,7 +1087,7 @@ vyzkoušení `dev` přímo z tutoriálu bohužel také k ničemu nevedlo.
 *Disclaimer: Tuto úlohu jsem bohužel nedokončil. Sepisuji zde alespoň svůj
 postup, který ale nemusí vést k řešení.*
 
-Ve zdrojovém kódu stránky se ná najít poznámka:
+Ve zdrojovém kódu stránky se dá najít poznámka:
 
 ```html
 <!-- New LDAP server host: 10.99.0.121 -->
@@ -1095,7 +1097,7 @@ Ve zdrojovém kódu stránky se ná najít poznámka:
 
 Dostáváme tak adresu LDAP serveru i ukázku dotazů, které asi tato webová
 aplikace LDAP serveru pokládá. Zkusíme, jestli je `__DATA__` nahrazované bez
-jakéhokoliv escapování a půjde tak udělat nějaký typ query injection.
+jakéhokoliv escapování, a půjde tak udělat nějaký typ query injection.
 
 V LDAP filterech se AND nebo OR zapisují v prefixové notaci, tedy pokud
 bych chtěl udělat OR tří výrazů, napíšu ho jako `(|(A)(B)(C))`. To by normálně
@@ -1114,7 +1116,8 @@ Dostaneme [výpis](12_Phonebook/web_query_out.txt), na jehož konci jsou dva zaj
   na web jeho jménem
 * `ldap_sync` má poznámku `Don't change password. gasg35faCasgt%AF` – máme heslo :)
 
-Vyzkoušíme se tedy jako `ldap_sync` přihlásit a vylistovat údaje o všech uživatelích:
+Vyzkoušíme se tedy jako `ldap_sync` přihlásit přímo k serveru a vylistovat údaje
+o všech uživatelích:
 
 ```sh
 ldapsearch -x -b 'dc=local,dc=tcc' -H 'ldap://10.99.0.121' -D "uid=ldap_sync,ou=people,dc=local,dc=tcc" -w "gasg35faCasgt%AF" "(uid=*)"
